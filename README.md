@@ -97,3 +97,29 @@ Scripts: `fetch2.py` (re-download keeping p-p38, p-MAPKAPK2, p-MKK3/6, p-GSK3β,
 - **GSK3β → β-catenin (fig9):** weak positive within-cell coupling (median ρ 0.12), only
   HCC1599 negative. ~16 % of cells have no detectable β-catenin (excluded).
 - Time points 12, 14 and 35 min exist for only 1–2 lines and are dropped.
+
+## CRC test of the p38α "inhibitor of the inhibitor" hypothesis (added Nov 2026)
+
+Hypothesis: p38α (MAPK14) restrains MAPK/ERK; removing it in MAPK-high (KRAS/BRAF-mutant)
+colorectal cancer pushes signalling too high → toxicity. Script: `crc_p38_test.py`.
+
+Data: Sanger Cell Model Passports (mutations, MSI), combined Sanger+Broad CRISPR screens
+(`Project_score_combined_Sanger_v1_Broad_20Q2_20210311`, Pacini et al. 2021; batch-corrected
+log fold change, QC-passed screens, duplicates averaged), GDSC 8.5. 39 CRC lines with CRISPR
+(12 RAS/RAF WT, 20 KRAS/NRAS hotspot, 7 BRAF V600E). DepMap's own portal blocks automated
+downloads, so the Sanger-hosted combined release was used.
+
+- **CRISPR (fig10):** MAPK14 knockout is mildly more deleterious in **BRAF V600E** CRC
+  (median LFC −0.11 vs +0.08 in WT; p = 0.01; p = 0.043 adjusting for MSI; holds when any one
+  line is dropped). No difference for KRAS/NRAS-mutant lines. Across CRC lines, MAPK14
+  dependency tracks **BRAF dependency** (ρ = 0.51, p = 0.001; also within non-BRAF lines, ρ = 0.42).
+  MAP2K3 (MKK3, upstream of p38) shows the same direction (p = 0.014).
+  **Effect size is small** (KRAS knockout in KRAS-mutant lines: −2.3).
+- Positive controls behave as expected (KRAS in KRAS-mutant, BRAF and MAPK1 in BRAF-mutant).
+  The ERK phosphatase **DUSP6** (a direct "ERK brake") is not essential in any group.
+- **GDSC (fig11):** p38 inhibitors barely kill CRC lines (doramapimod, VX-702: IC50 almost
+  never reached; TAK-715 in 16 %). TAK-715 trends the *opposite* way (mutants less sensitive,
+  p = 0.03). Trametinib and dabrafenib controls work as expected.
+- Interpretation: consistent with p38α mattering more where cells depend on BRAF→ERK, but
+  CRISPR fitness cannot tell "hyperactivation toxicity" from "p38α supports growth". Needs a
+  pERK/DUSP readout after MAPK14 loss and a MEK-inhibitor rescue.
