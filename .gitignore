@@ -1,0 +1,6 @@
+data/
+reduced/
+gdsc/
+meta/
+*.parquet
+__pycache__/

@@ -1,0 +1,77 @@
+# Breast cancer single-cell signalling: mean vs tail
+
+Does the **fraction of cells pushed into a very high signalling state** (the "tail")
+explain drug sensitivity across breast cancer cell lines better than the
+**population mean**?
+
+Data: the Tognetti/Bodenmiller mass cytometry dataset behind the
+*Single Cell Signaling in Breast Cancer DREAM Challenge*
+([Synapse syn20366914](https://www.synapse.org/Synapse:syn20366914);
+Tognetti et al., *Cell Systems* 2021; Gabor et al., *Mol Syst Biol* 2021, e10402).
+Drug sensitivity: [GDSC](https://www.cancerrxgene.org) release 8.5 (GDSC2, GDSC1 as fallback), AUC.
+
+## What was done
+
+1. **Download** (`scripts/fetch.py`): the 44 cell lines in
+   `single_cell_phospo/complete_cell_lines` (syn20613593). Each file is reduced to
+   the columns used here (pERK, pMEK, p90RSK, pAKT S473/T308, pS6, pS6K, p4EBP1,
+   cleaved caspase-3, Ki-67, pRB, GAPDH) and saved as Parquet. Values are already
+   arcsinh-transformed in the challenge files.
+2. **Features per line** (`scripts/analyse.py`), EGF-only condition:
+   - peak time = EGF time point with the highest median pERK
+   - at the peak, for pERK, pAKT (S473) and pS6:
+     - `mean`, `induction` (peak mean minus time-0 mean)
+     - `tail` = fraction of cells above the pooled 95th percentile (pooled with equal cells per line)
+     - `upper_spread` = 95th percentile minus median (location-free tail width)
+     - `tail_resid` = tail left over after regressing it on the mean (quadratic)
+   - cross-talk: co-activation of pS6/pAKT within high-pERK cells, and within-cell correlations
+   - replicate check: the two time-0 EGF files per line, between-line SD / within-replicate SD
+3. **Drug link**: Spearman correlation of each feature with GDSC AUC for 24
+   pre-specified MEK, ERK, EGFR/HER2, PI3K, AKT and mTOR drugs (34 lines matched).
+   Benjamini–Hochberg FDR across all 360 tests; bootstrap CI for
+   |ρ(tail)| − |ρ(mean)|; partial correlation of tail given mean.
+4. **Figures** (`scripts/plots.py`).
+
+## First results (Nov 2026)
+
+- Tail and mean are almost the same measurement across lines (pERK ρ = 0.87, fig3).
+- But lines with equal means can have very different tails, e.g. HCC1187 vs MDA-MB-157:
+  1.5 % vs 16 % of cells above the threshold (fig2).
+- The tail is a reproducible line property: between-line / within-replicate ratio 4.8 (tail) vs 3.4 (mean) at baseline.
+- **pERK vs MEK/ERK inhibitors: the tail never beat the mean** (bootstrap CI for the
+  difference includes 0 for all drugs). Best: PD0325901, ρ ≈ −0.43 for both.
+- **Only FDR-surviving hit:** pAKT `tail_resid` vs MK-2206 (AKT inhibitor) AUC,
+  ρ = −0.60, q = 0.07. Lines with more high-pAKT cells than their mean predicts are
+  more sensitive; the same direction holds across other AKT/PI3K/mTOR drugs (fig4).
+  Exploratory: 23/360 tests had p < 0.05 (~18 expected by chance).
+
+### Caveats
+- n = 34 lines with drug data: limited power.
+- Not yet adjusted for subtype (luminal / HER2+ / basal).
+- Some lines barely respond to EGF, so their "peak" time is noisy.
+- Within-cell correlations between phospho markers are partly driven by cell size/staining.
+
+## Next steps
+- Add subtype and test the pAKT finding within subtypes.
+- Use inhibitor conditions (does the high-pERK tail persist under MEK inhibition?).
+- Join DepMap (CRISPR / PRISM) by cell line name.
+
+## Rerunning
+
+Needs Python with `pandas numpy scipy matplotlib pyarrow openpyxl`, and a Synapse
+account with access to the challenge data. Scripts take one argument: a working
+folder `W` that holds `reduced/`, `gdsc/` and gets `results/`.
+
+```bash
+python scripts/fetch.py W          # downloads to W/data, writes W/reduced/*.parquet
+# GDSC: download GDSC1/GDSC2_fitted_dose_response_27Oct23.xlsx from
+# https://cog.sanger.ac.uk/cancerrxgene/GDSC_release8.5/ into W/gdsc/ and combine
+# them into W/gdsc/gdsc.parquet (pandas: read_excel both, concat, to_parquet)
+python scripts/analyse.py W
+python scripts/plots.py W
+```
+
+`fetch.py` uses plain `curl` against the Synapse REST API and expects the
+Synapse access token to be supplied as an `Authorization: Bearer` header
+(in the Claude cloud environment this is injected by the network proxy).
+Raw data are not stored in this repository.
