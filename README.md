@@ -75,3 +75,25 @@ python scripts/plots.py W
 Synapse access token to be supplied as an `Authorization: Bearer` header
 (in the Claude cloud environment this is injected by the network proxy).
 Raw data are not stored in this repository.
+
+## p38 / GSK3 / β-catenin (added Nov 2026)
+
+Scripts: `fetch2.py` (re-download keeping p-p38, p-MAPKAPK2, p-MKK3/6, p-GSK3β,
+β-catenin, p-JNK, p-CREB → `W/reduced2/`), `plot_drugs.py`, `analyse_p38_wnt.py`.
+
+- **Drugs (fig5):** p38 inhibitors (doramapimod, TAK-715, VX-702) and GSK3 inhibitors
+  (CHIR-99021, SB216763) barely affect breast lines in GDSC (median AUC 0.95–0.99;
+  IC50 reached in ≤ 8 % of lines), so there is no response to correlate. No feature
+  correlated (all p > 0.05). SB202190 is not in GDSC.
+- **Dynamics (fig6):** EGF raises p-p38 (sustained, peaks ~10–20 min) and p-MAPKAPK2,
+  modestly p-JNK and p-GSK3β; **β-catenin does not change** within 60 min.
+- **Cross-talk (fig7):** within the same cell at the pERK peak, pERK co-varies with p-AKT
+  (median ρ 0.54) and p-p38 / p-MAPKAPK2 (~0.45), less with p-JNK (0.20) and hardly with
+  β-catenin (0.09). GAPDH-adjusted, but caution: every phospho marker co-varies with
+  cell size/staining (pERK vs GAPDH ρ ≈ 0.5), so absolute values are inflated; the
+  ranking is more informative.
+- **Heterogeneity (fig8):** as for pERK, the high tail of p-p38, p-MAPKAPK2 and
+  β-catenin mostly tracks the mean across lines (ρ 0.77–0.95).
+- **GSK3β → β-catenin (fig9):** weak positive within-cell coupling (median ρ 0.12), only
+  HCC1599 negative. ~16 % of cells have no detectable β-catenin (excluded).
+- Time points 12, 14 and 35 min exist for only 1–2 lines and are dropped.
